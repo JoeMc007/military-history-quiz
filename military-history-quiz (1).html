@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Military History Quiz Challenge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: #f39c12;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #ecf0f1;
+            margin-bottom: 30px;
+            font-size: 1.2em;
+        }
+
+        .screen {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .selection-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .selection-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(243, 156, 18, 0.4);
+        }
+
+        .question-container {
+            margin: 30px 0;
+        }
+
+        .question-number {
+            color: #f39c12;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .question-text {
+            font-size: 1.5em;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .answer-btn {
+            display: block;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .answer-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #f39c12;
+        }
+
+        .answer-btn.correct {
+            background: #27ae60;
+            border-color: #27ae60;
+            animation: correctPulse 0.5s;
+        }
+
+        .answer-btn.incorrect {
+            background: #e74c3c;
+            border-color: #e74c3c;
+            animation: shake 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f39c12 0%, #e67e22 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .score-display {
+            text-align: center;
+            font-size: 3em;
+            color: #f39c12;
+            margin: 30px 0;
+        }
+
+        .leaderboard {
+            margin: 30px 0;
+        }
+
+        .leaderboard-entry {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-entry.top-3 {
+            background: linear-gradient(90deg, rgba(243, 156, 18, 0.3) 0%, rgba(230, 126, 34, 0.3) 100%);
+        }
+
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f39c12;
+            width: 50px;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 1.1em;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+        }
+
+        .timer {
+            text-align: center;
+            font-size: 2em;
+            color: #f39c12;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⭐ Military History Quiz Challenge ⭐</h1>
+        <p class="subtitle">Test your knowledge and climb the ranks!</p>
+
+        <!-- Welcome Screen -->
+        <div id="welcomeScreen" class="screen active">
+            <h2 style="text-align: center; margin-bottom: 30px;">Welcome, Soldier! 🎖️</h2>
+            <p style="text-align: center; font-size: 1.2em; margin-bottom: 30px;">
+                Choose your difficulty and prepare for battle!
+            </p>
+            <h3 style="color: #f39c12; margin-bottom: 15px;">Select Difficulty:</h3>
+            <div class="selection-grid">
+                <button class="selection-btn" onclick="selectDifficulty('easy')">Easy<br><small>5 Questions</small></button>
+                <button class="selection-btn" onclick="selectDifficulty('medium')">Medium<br><small>7 Questions</small></button>
+                <button class="selection-btn" onclick="selectDifficulty('hard')">Hard<br><small>10 Questions</small></button>
+            </div>
+        </div>
+
+        <!-- War Selection Screen -->
+        <div id="warScreen" class="screen">
+            <h2 style="text-align: center; margin-bottom: 30px;">Choose Your Theater of War 🎯</h2>
+            <div class="selection-grid">
+                <button class="selection-btn" onclick="selectWar('wwii')">World War II</button>
+                <button class="selection-btn" onclick="selectWar('vietnam')">Vietnam War</button>
+                <button class="selection-btn" onclick="selectWar('coldwar')">Cold War</button>
+                <button class="selection-btn" onclick="selectWar('modern')">Modern Warfare</button>
+            </div>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quizScreen" class="screen">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar">Question 1 of 5</div>
+            </div>
+            <div class="timer" id="timer">Time: 30s</div>
+            <div class="question-container">
+                <div class="question-number" id="questionNumber">Question 1</div>
+                <div class="question-text" id="questionText"></div>
+                <div id="answersContainer"></div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="resultsScreen" class="screen">
+            <h2 style="text-align: center; margin-bottom: 20px;">Mission Complete! 🎯</h2>
+            <div class="score-display" id="finalScore"></div>
+            <p style="text-align: center; font-size: 1.3em; margin-bottom: 30px;" id="scoreMessage"></p>
+            <input type="text" id="playerName" class="name-input" placeholder="Enter your name for the leaderboard..." maxlength="20">
+            <div style="text-align: center;">
+                <button class="btn" onclick="saveScore()">Save My Score</button>
+                <button class="btn btn-secondary" onclick="restartQuiz()">Try Again</button>
+            </div>
+        </div>
+
+        <!-- Leaderboard Screen -->
+        <div id="leaderboardScreen" class="screen">
+            <h2 style="text-align: center; margin-bottom: 30px;">🏆 Hall of Fame 🏆</h2>
+            <div class="leaderboard" id="leaderboardList"></div>
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn" onclick="restartQuiz()">Play Again</button>
+                <button class="btn btn-secondary" onclick="viewLeaderboard()">Refresh Leaderboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game State
+        let currentDifficulty = '';
+        let currentWar = '';
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questions = [];
+        let timeLeft = 30;
+        let timerInterval;
+
+        // Question Bank
+        const questionBank = {
+            wwii: {
+                easy: [
+                    { q: "What year did World War II end?", a: ["1945", "1944", "1946", "1943"], correct: 0 },
+                    { q: "Who was the US President during most of WWII?", a: ["Franklin D. Roosevelt", "Harry Truman", "Dwight Eisenhower", "Herbert Hoover"], correct: 0 },
+                    { q: "Which battle is known as D-Day?", a: ["Normandy Invasion", "Battle of the Bulge", "Pearl Harbor", "Battle of Midway"], correct: 0 },
+                    { q: "What was the name of the atomic bomb dropped on Hiroshima?", a: ["Little Boy", "Fat Man", "Trinity", "Gadget"], correct: 0 },
+                    { q: "Which country was NOT part of the Axis Powers?", a: ["Soviet Union", "Germany", "Italy", "Japan"], correct: 0 }
+                ],
+                medium: [
+                    { q: "What was Operation Overlord?", a: ["D-Day Invasion", "Battle of Stalingrad", "Pearl Harbor Attack", "Battle of Midway"], correct: 0 },
+                    { q: "Who commanded Allied forces in Europe?", a: ["Dwight Eisenhower", "George Patton", "Douglas MacArthur", "Bernard Montgomery"], correct: 0 },
+                    { q: "What year did Germany invade Poland?", a: ["1939", "1940", "1938", "1941"], correct: 0 },
+                    { q: "Which battle was the turning point on the Eastern Front?", a: ["Stalingrad", "Kursk", "Moscow", "Leningrad"], correct: 0 },
+                    { q: "What was the Manhattan Project?", a: ["Atomic bomb development", "D-Day planning", "Pearl Harbor investigation", "Pacific island hopping"], correct: 0 },
+                    { q: "Who was the Supreme Commander of Japanese forces?", a: ["Emperor Hirohito", "Hideki Tojo", "Isoroku Yamamoto", "Tomoyuki Yamashita"], correct: 0 },
+                    { q: "What was the largest amphibious invasion in history?", a: ["D-Day", "Iwo Jima", "Okinawa", "Sicily"], correct: 0 }
+                ],
+                hard: [
+                    { q: "What was the code name for the German invasion of Soviet Union?", a: ["Operation Barbarossa", "Operation Typhoon", "Operation Blue", "Operation Citadel"], correct: 0 },
+                    { q: "Which US General said 'I shall return' after leaving the Philippines?", a: ["Douglas MacArthur", "George Patton", "Omar Bradley", "Mark Clark"], correct: 0 },
+                    { q: "What was the first major US offensive in the Pacific?", a: ["Guadalcanal", "Midway", "Coral Sea", "Iwo Jima"], correct: 0 },
+                    { q: "Who broke the Enigma code?", a: ["Alan Turing", "Winston Churchill", "Dwight Eisenhower", "George Marshall"], correct: 0 },
+                    { q: "What German general was known as the 'Desert Fox'?", a: ["Erwin Rommel", "Heinz Guderian", "Gerd von Rundstedt", "Friedrich Paulus"], correct: 0 },
+                    { q: "What was the bloodiest single day for American forces in WWII?", a: ["D-Day", "Pearl Harbor", "Battle of the Bulge", "Iwo Jima"], correct: 0 },
+                    { q: "Which Soviet general led the defense of Moscow?", a: ["Georgy Zhukov", "Konstantin Rokossovsky", "Ivan Konev", "Vasily Chuikov"], correct: 0 },
+                    { q: "What was Operation Market Garden?", a: ["Failed Allied airborne operation", "D-Day invasion", "Battle of the Bulge", "Liberation of Paris"], correct: 0 },
+                    { q: "Who commanded the Afrika Korps?", a: ["Erwin Rommel", "Wilhelm List", "Albert Kesselring", "Erich von Manstein"], correct: 0 },
+                    { q: "What ship sank the Bismarck?", a: ["HMS Dorsetshire", "HMS Hood", "HMS Prince of Wales", "HMS Rodney"], correct: 0 }
+                ]
+            },
+            vietnam: {
+                easy: [
+                    { q: "What years did the Vietnam War span?", a: ["1955-1975", "1960-1973", "1965-1975", "1950-1970"], correct: 0 },
+                    { q: "Who was the US President when the war ended?", a: ["Gerald Ford", "Richard Nixon", "Lyndon Johnson", "John F. Kennedy"], correct: 0 },
+                    { q: "What was the capital of South Vietnam?", a: ["Saigon", "Hanoi", "Hue", "Da Nang"], correct: 0 },
+                    { q: "What was Agent Orange used for?", a: ["Defoliant", "Weapon", "Medicine", "Communication"], correct: 0 },
+                    { q: "What does Viet Cong mean?", a: ["Vietnamese Communist", "Victory Corps", "Village Council", "Vigilant Command"], correct: 0 }
+                ],
+                medium: [
+                    { q: "What was the Tet Offensive?", a: ["Major North Vietnamese attack", "US bombing campaign", "Peace treaty", "Guerrilla tactic"], correct: 0 },
+                    { q: "What incident led to major US involvement?", a: ["Gulf of Tonkin", "Fall of Dien Bien Phu", "Tet Offensive", "My Lai Massacre"], correct: 0 },
+                    { q: "What was Operation Rolling Thunder?", a: ["Bombing campaign", "Ground offensive", "Naval blockade", "Search and destroy"], correct: 0 },
+                    { q: "Who led North Vietnam?", a: ["Ho Chi Minh", "Vo Nguyen Giap", "Le Duan", "Pham Van Dong"], correct: 0 },
+                    { q: "What was the Ho Chi Minh Trail?", a: ["Supply route", "Military base", "River crossing", "Border checkpoint"], correct: 0 },
+                    { q: "What year did US combat troops withdraw?", a: ["1973", "1975", "1972", "1974"], correct: 0 },
+                    { q: "What was 'Vietnamization'?", a: ["Transferring war to South Vietnam", "US escalation", "Peace talks", "Bombing campaign"], correct: 0 }
+                ],
+                hard: [
+                    { q: "Who was the architect of North Vietnam's military strategy?", a: ["Vo Nguyen Giap", "Ho Chi Minh", "Le Duan", "Pham Van Dong"], correct: 0 },
+                    { q: "What was the significance of Khe Sanh?", a: ["Major siege", "First US base", "Peace talks location", "DMZ checkpoint"], correct: 0 },
+                    { q: "What year was the My Lai Massacre?", a: ["1968", "1969", "1967", "1970"], correct: 0 },
+                    { q: "What was Operation Phoenix?", a: ["Counter-insurgency program", "Bombing campaign", "Naval operation", "Evacuation plan"], correct: 0 },
+                    { q: "Who commanded US forces 1964-1968?", a: ["William Westmoreland", "Creighton Abrams", "Maxwell Taylor", "Paul Harkins"], correct: 0 },
+                    { q: "What was the 'Christmas Bombing'?", a: ["Operation Linebacker II", "Tet Offensive", "Rolling Thunder", "Arc Light"], correct: 0 },
+                    { q: "What battle inspired 'We Were Soldiers'?", a: ["Ia Drang", "Khe Sanh", "Hue", "A Shau"], correct: 0 },
+                    { q: "What was the Paris Peace Accords?", a: ["1973 ceasefire agreement", "1968 peace talks", "1975 surrender", "1965 treaty"], correct: 0 },
+                    { q: "What helicopter was most iconic?", a: ["UH-1 Huey", "CH-47 Chinook", "AH-1 Cobra", "OH-6 Cayuse"], correct: 0 },
+                    { q: "What was Operation Frequent Wind?", a: ["Saigon evacuation", "Bombing campaign", "Ground offensive", "Naval blockade"], correct: 0 }
+                ]
+            },
+            coldwar: {
+                easy: [
+                    { q: "What was the Cold War?", a: ["US-Soviet tension", "Winter war", "Nuclear war", "Trade war"], correct: 0 },
+                    { q: "What separated East and West Berlin?", a: ["Berlin Wall", "Iron Curtain", "Brandenburg Gate", "Checkpoint Charlie"], correct: 0 },
+                    { q: "What year did the Cold War end?", a: ["1991", "1989", "1990", "1992"], correct: 0 },
+                    { q: "What was NATO?", a: ["Western alliance", "Soviet bloc", "UN agency", "Trade agreement"], correct: 0 },
+                    { q: "Who was the first man in space?", a: ["Yuri Gagarin", "Neil Armstrong", "John Glenn", "Alan Shepard"], correct: 0 }
+                ],
+                medium: [
+                    { q: "What was the Cuban Missile Crisis?", a: ["1962 nuclear standoff", "Bay of Pigs invasion", "Castro revolution", "Missile test"], correct: 0 },
+                    { q: "What was the Warsaw Pact?", a: ["Soviet alliance", "NATO treaty", "Peace agreement", "Trade bloc"], correct: 0 },
+                    { q: "Who led the Soviet Union during the Cuban Missile Crisis?", a: ["Nikita Khrushchev", "Joseph Stalin", "Leonid Brezhnev", "Mikhail Gorbachev"], correct: 0 },
+                    { q: "What was the Marshall Plan?", a: ["US aid to Europe", "Soviet expansion", "NATO formation", "Berlin blockade"], correct: 0 },
+                    { q: "What was détente?", a: ["Easing of tensions", "Nuclear buildup", "Space race", "Arms race"], correct: 0 },
+                    { q: "What year was the Berlin Wall built?", a: ["1961", "1960", "1962", "1959"], correct: 0 },
+                    { q: "Who was President during Cuban Missile Crisis?", a: ["John F. Kennedy", "Dwight Eisenhower", "Lyndon Johnson", "Harry Truman"], correct: 0 }
+                ],
+                hard: [
+                    { q: "What was the Truman Doctrine?", a: ["Containment policy", "Nuclear strategy", "Marshall Plan", "Berlin airlift"], correct: 0 },
+                    { q: "What was Operation Gold?", a: ["Berlin spy tunnel", "U-2 program", "Missile defense", "Space program"], correct: 0 },
+                    { q: "Who coined 'Iron Curtain'?", a: ["Winston Churchill", "Harry Truman", "George Kennan", "Dean Acheson"], correct: 0 },
+                    { q: "What was SALT?", a: ["Arms limitation treaty", "Space program", "NATO expansion", "Economic plan"], correct: 0 },
+                    { q: "What was the Prague Spring?", a: ["1968 Czech reform", "Berlin Wall fall", "Hungarian uprising", "Polish solidarity"], correct: 0 },
+                    { q: "Who was the 'father of containment'?", a: ["George Kennan", "Dean Acheson", "John Foster Dulles", "Henry Kissinger"], correct: 0 },
+                    { q: "What was the U-2 incident?", a: ["Spy plane shot down", "Nuclear accident", "Berlin crisis", "Space failure"], correct: 0 },
+                    { q: "What was mutually assured destruction?", a: ["MAD nuclear doctrine", "Arms treaty", "Defense system", "Space race"], correct: 0 },
+                    { q: "What was the Kitchen Debate?", a: ["Nixon-Khrushchev exchange", "Arms talks", "Berlin crisis", "Cuban standoff"], correct: 0 },
+                    { q: "What ended the Cold War?", a: ["Soviet collapse", "Berlin Wall fall", "Reagan election", "Gorbachev reforms"], correct: 0 }
+                ]
+            },
+            modern: {
+                easy: [
+                    { q: "What year was 9/11?", a: ["2001", "2000", "2002", "1999"], correct: 0 },
+                    { q: "Where was Osama bin Laden found?", a: ["Pakistan", "Afghanistan", "Iraq", "Saudi Arabia"], correct: 0 },
+                    { q: "What does ISIS stand for?", a: ["Islamic State of Iraq and Syria", "International Security Intelligence Service", "Iraqi Special Intelligence Service", "Islamic Security in Syria"], correct: 0 },
+                    { q: "What is a drone?", a: ["Unmanned aircraft", "Tank", "Missile", "Helicopter"], correct: 0 },
+                    { q: "What was Operation Desert Storm?", a: ["1991 Gulf War", "Iraq invasion", "Afghanistan war", "Syria conflict"], correct: 0 }
+                ],
+                medium: [
+                    { q: "What year did the Iraq War begin?", a: ["2003", "2001", "2004", "2002"], correct: 0 },
+                    { q: "What was the Arab Spring?", a: ["2011 protests", "Gulf War", "ISIS rise", "Syrian conflict"], correct: 0 },
+                    { q: "Who led the hunt for bin Laden?", a: ["SEAL Team 6", "Delta Force", "Green Berets", "Rangers"], correct: 0 },
+                    { q: "What is cyber warfare?", a: ["Digital attacks", "Drone strikes", "Information ops", "Electronic jamming"], correct: 0 },
+                    { q: "What was Operation Enduring Freedom?", a: ["Afghanistan War", "Iraq War", "Gulf War", "Libya intervention"], correct: 0 },
+                    { q: "What is IED?", a: ["Improvised Explosive Device", "International Emergency Defense", "Insurgent Engagement Directive", "Infantry Equipment Design"], correct: 0 },
+                    { q: "What was the 'Surge' in Iraq?", a: ["Troop increase 2007", "Initial invasion", "ISIS response", "Withdrawal plan"], correct: 0 }
+                ],
+                hard: [
+                    { q: "What was Stuxnet?", a: ["Cyber weapon vs Iran", "Drone program", "Special ops", "Missile defense"], correct: 0 },
+                    { q: "What is A2/AD?", a: ["Anti-Access/Area Denial", "Advanced Air Defense", "Automated Attack Deployment", "Allied Air-to-Air Directive"], correct: 0 },
+                    { q: "What operation killed bin Laden?", a: ["Operation Neptune Spear", "Operation Geronimo", "Operation Enduring Freedom", "Operation Red Wings"], correct: 0 },
+                    { q: "What is hybrid warfare?", a: ["Conventional and irregular", "Cyber and kinetic", "Air and ground", "Special and regular"], correct: 0 },
+                    { q: "What was the Fallujah battles?", a: ["2004 Iraq operations", "Afghanistan fighting", "Syria conflict", "Gulf War battle"], correct: 0 },
+                    { q: "What is the F-35?", a: ["Stealth fighter", "Drone", "Bomber", "Transport"], correct: 0 },
+                    { q: "What was Operation Inherent Resolve?", a: ["Anti-ISIS campaign", "Afghanistan war", "Libya intervention", "Somalia ops"], correct: 0 },
+                    { q: "What is asymmetric warfare?", a: ["Unequal force conflict", "Nuclear war", "Cyber attacks", "Special operations"], correct: 0 },
+                    { q: "What was the Abbottabad raid?", a: ["Bin Laden capture", "ISIS leader kill", "Taliban attack", "Iraq operation"], correct: 0 },
+                    { q: "What is COIN?", a: ["Counter-insurgency", "Combat Intelligence", "Covert Operations", "Command Integration"], correct: 0 }
+                ]
+            }
+        };
+
+        function selectDifficulty(difficulty) {
+            currentDifficulty = difficulty;
+            showScreen('warScreen');
+        }
+
+        function selectWar(war) {
+            currentWar = war;
+            const numQuestions = currentDifficulty === 'easy' ? 5 : currentDifficulty === 'medium' ? 7 : 10;
+            questions = questionBank[war][currentDifficulty].sort(() => Math.random() - 0.5).slice(0, numQuestions);
+            currentQuestionIndex = 0;
+            score = 0;
+            showScreen('quizScreen');
+            showQuestion();
+            startTimer();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestionIndex];
+            const numQuestions = questions.length;
+            const progress = ((currentQuestionIndex + 1) / numQuestions) * 100;
+            
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('progressBar').textContent = `Question ${currentQuestionIndex + 1} of ${numQuestions}`;
+            document.getElementById('questionNumber').textContent = `Question ${currentQuestionIndex + 1}`;
+            document.getElementById('questionText').textContent = question.q;
+            
+            const container = document.getElementById('answersContainer');
+            container.innerHTML = '';
+            
+            question.a.forEach((answer, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'answer-btn';
+                btn.textContent = answer;
+                btn.onclick = () => checkAnswer(index);
+                container.appendChild(btn);
+            });
+            
+            resetTimer();
+        }
+
+        function checkAnswer(selectedIndex) {
+            clearInterval(timerInterval);
+            const question = questions[currentQuestionIndex];
+            const buttons = document.querySelectorAll('.answer-btn');
+            
+            buttons.forEach((btn, index) => {
+                btn.disabled = true;
+                if (index === question.correct) {
+                    btn.classList.add('correct');
+                } else if (index === selectedIndex) {
+                    btn.classList.add('incorrect');
+                }
+            });
+            
+            if (selectedIndex === question.correct) {
+                score++;
+            }
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                    startTimer();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        }
+
+        function startTimer() {
+            timeLeft = 30;
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                if (timeLeft <= 0) {
+                    checkAnswer(-1); // Auto-submit as wrong
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
+            document.getElementById('timer').style.color = timeLeft <= 10 ? '#e74c3c' : '#f39c12';
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            const percentage = Math.round((score / questions.length) * 100);
+            document.getElementById('finalScore').textContent = `${score} / ${questions.length}`;
+            
+            let message = '';
+            if (percentage >= 90) message = '🎖️ OUTSTANDING! You\'re a true military historian!';
+            else if (percentage >= 70) message = '⭐ EXCELLENT! You know your history!';
+            else if (percentage >= 50) message = '👍 GOOD JOB! Keep studying!';
+            else message = '📚 KEEP TRAINING! Every expert was once a beginner!';
+            
+            document.getElementById('scoreMessage').textContent = message;
+            showScreen('resultsScreen');
+        }
+
+        function saveScore() {
+            const playerName = document.getElementById('playerName').value.trim() || 'Anonymous';
+            const leaderboard = JSON.parse(localStorage.getItem('militaryQuizLeaderboard') || '[]');
+            
+            leaderboard.push({
+                name: playerName,
+                score: score,
+                total: questions.length,
+                difficulty: currentDifficulty,
+                war: currentWar,
+                date: new Date().toLocaleDateString()
+            });
+            
+            leaderboard.sort((a, b) => {
+                const percentA = a.score / a.total;
+                const percentB = b.score / b.total;
+                return percentB - percentA;
+            });
+            
+            localStorage.setItem('militaryQuizLeaderboard', JSON.stringify(leaderboard.slice(0, 50)));
+            viewLeaderboard();
+        }
+
+        function viewLeaderboard() {
+            const leaderboard = JSON.parse(localStorage.getItem('militaryQuizLeaderboard') || '[]');
+            const container = document.getElementById('leaderboardList');
+            
+            if (leaderboard.length === 0) {
+                container.innerHTML = '<p style="text-align: center; font-size: 1.2em;">No scores yet. Be the first!</p>';
+            } else {
+                container.innerHTML = leaderboard.map((entry, index) => {
+                    const percentage = Math.round((entry.score / entry.total) * 100);
+                    const topClass = index < 3 ? 'top-3' : '';
+                    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '';
+                    
+                    return `
+                        <div class="leaderboard-entry ${topClass}">
+                            <div class="rank">${medal} #${index + 1}</div>
+                            <div style="flex-grow: 1;">
+                                <div style="font-size: 1.2em; font-weight: bold;">${entry.name}</div>
+                                <div style="font-size: 0.9em; opacity: 0.8;">
+                                    ${entry.war.toUpperCase()} - ${entry.difficulty.toUpperCase()} | ${entry.date}
+                                </div>
+                            </div>
+                            <div style="font-size: 1.5em; font-weight: bold; color: #f39c12;">
+                                ${percentage}%<br>
+                                <span style="font-size: 0.7em;">${entry.score}/${entry.total}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            showScreen('leaderboardScreen');
+        }
+
+        function restartQuiz() {
+            clearInterval(timerInterval);
+            currentQuestionIndex = 0;
+            score = 0;
+            showScreen('welcomeScreen');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Clear any old timers
+            clearInterval(timerInterval);
+        });
+    </script>
+</body>
+</html>
